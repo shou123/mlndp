@@ -1,0 +1,3 @@
+[client.bootstrap-mgr]
+	key = AQCZuddk6yydFhAAPSE7UOS5hpxWkO5byyfpkg==
+	caps mon = "allow profile bootstrap-mgr"

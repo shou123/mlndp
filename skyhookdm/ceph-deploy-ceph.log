@@ -1,0 +1,16 @@
+[2023-08-13 21:08:32,322][ceph_deploy.conf][DEBUG ] found configuration file at: /home/yue21/.cephdeploy.conf
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ] Invoked (2.1.0): /home/yue21/.local/bin/ceph-deploy mds create worker4
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ] ceph-deploy options:
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  verbose                       : False
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  quiet                         : False
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  username                      : None
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  overwrite_conf                : False
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  ceph_conf                     : None
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  cluster                       : ceph
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  subcommand                    : create
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  cd_conf                       : <ceph_deploy.conf.cephdeploy.Conf object at 0x7fd5d16d0fa0>
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  default_release               : False
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  func                          : <function mds at 0x7fd5d1710b80>
+[2023-08-13 21:08:32,322][ceph_deploy.cli][INFO  ]  mds                           : [('worker4', 'worker4')]
+[2023-08-13 21:08:32,323][ceph_deploy][ERROR ] ConfigError: Cannot load config: [Errno 2] No such file or directory: 'ceph.conf'; has `ceph-deploy new` been run in this directory?
+
