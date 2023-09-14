@@ -1,0 +1,5 @@
+ps_partkey, integer     
+ps_suppkey, integer     
+ps_availqty, integer    
+ps_supplycost, double  
+ps_comment, string     

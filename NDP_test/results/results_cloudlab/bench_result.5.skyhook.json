@@ -1,0 +1,7 @@
+[
+    {"query": 5, "format": "skyhook", "latency": 97.857},
+    {"query": 5, "format": "skyhook", "latency": 78.191},
+    {"query": 5, "format": "skyhook", "latency": 78.002},
+    {"query": 5, "format": "skyhook", "latency": 78.513},
+    {"query": 5, "format": "skyhook", "latency": 98.316}
+]

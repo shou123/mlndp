@@ -1,0 +1,1 @@
+[{"query": 7, "format": "parquet", "latency": 50.379263162612915}, {"query": 7, "format": "parquet", "latency": 49.919527769088745}, {"query": 7, "format": "parquet", "latency": 49.72613000869751}]
