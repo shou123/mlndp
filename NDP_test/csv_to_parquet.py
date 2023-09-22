@@ -51,7 +51,12 @@ if __name__ == "__main__":
         destination_dir_m = os.path.join(destination_dir, table_name)
         os.makedirs(os.path.join(destination_dir_m), exist_ok=True)
 
-        with ThreadPoolExecutor(max_workers=mp.cpu_count()) as executor:
+        # for filename in os.listdir(source_dir_m):
+        #     convert(source_dir_m, destination_dir_m, filename)
+        #     print(f'{table_name} file converted.')
+
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
             futures = [executor.submit(convert, source_dir_m, destination_dir_m, filename) for filename in os.listdir(source_dir_m)]
             for future in as_completed(futures):
                 print(f'{table_name} file converted.')

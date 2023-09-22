@@ -13,7 +13,7 @@ import pyarrow.dataset as ds
 
 def drop_caches():
     os.system("sync")
-    os.system("echo 3 > /proc/sys/vm/drop_caches")
+    os.system("sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'")
     os.system("sync")
     time.sleep(2)
 
@@ -34,15 +34,13 @@ if __name__ == "__main__":
     part     = ds.dataset(os.path.join(dataset_path, "part"), format=format)
     partsupp = ds.dataset(os.path.join(dataset_path, "partsupp"), format=format)
 
-    # for debug
-    # with open(f"cse215/queries/q{query_no}.sql", "r") as f:
-    #     query = f.read()
+    # query = "SELECT * FROM lineitem LIMIT 20;" 
 
     # for command
-    with open(f"queries/q{query_no}.sql", "r") as f:
+    with open(f"project/NDP_test/queries/q{query_no}.sql", "r") as f:
         query = f.read()
 
-    query = f"PRAGMA disable_object_cache;\nPRAGMA threads={mp.cpu_count()};\n{query}"
+    # query = f"PRAGMA disable_object_cache;\nPRAGMA threads={mp.cpu_count()};\n{query}"
     for _ in range(200):
         drop_caches()
         conn = duckdb.connect()
@@ -59,7 +57,4 @@ if __name__ == "__main__":
             "format": format,
             "latency": e - s
         })
-
-    # with open(f"cse215/results/current_results_1/bench_result.{query_no}.{format}.json", "w") as f:
-    #     f.write(json.dumps(data))
     print("Benchmark finished")
