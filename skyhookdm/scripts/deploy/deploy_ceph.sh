@@ -190,7 +190,7 @@ ceph osd pool set device_health_metrics size $POOL_SIZE
 echo "[9] deploying CephFS"
 ceph fs new cephfs cephfs_metadata cephfs_data
 mkdir -p /mnt/cephfs
-
+                                                                                                                                                                                                                                             
 echo "[10] mounting CephFS at /mnt/cephfs"
 sleep 5
 ceph-fuse /mnt/cephfs
