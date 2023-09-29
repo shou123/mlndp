@@ -25,7 +25,8 @@ if [[ $# -lt 1 ]] ; then
 fi
 
 NODES=$1
-BRANCH=${2:-arrow-master}
+# BRANCH=${2:-arrow-master}
+BRANCH=${2:-main}
 DEPLOY_CLS_LIBS=${3:-true}
 BUILD_PYTHON_BINDINGS=${4:-true}
 BUILD_JAVA_BINDINGS=${5:-false}
@@ -50,7 +51,9 @@ read -p "install python package..."
 
 if [ ! -d "/home/yue21/mlndp/skyhookdm/arrow" ]; then
   echo "clone skyhook repository"
-  git clone https://github.com/uccross/skyhookdm-arrow /home/yue21/mlndp/skyhookdm/arrow
+  # git clone https://github.com/uccross/skyhookdm-arrow /home/yue21/mlndp/skyhookdm/arrow
+  git clone https://github.com/shou123/skyhook-arrow.git /home/yue21/mlndp/skyhookdm/arrow
+
   cd /home/yue21/mlndp/skyhookdm/arrow
   git submodule update --init --recursive
 fi
