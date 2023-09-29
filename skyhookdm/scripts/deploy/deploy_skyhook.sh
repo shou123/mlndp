@@ -45,21 +45,25 @@ apt install -y python3 \
                default-jdk \
                maven
 
-if [ ! -d "/home/yue21/skyhookdm/arrow" ]; then
+read -p "install python package..." 
+
+
+if [ ! -d "/home/yue21/mlndp/skyhookdm/arrow" ]; then
   echo "clone skyhook repository"
-  git clone https://github.com/uccross/skyhookdm-arrow /home/yue21/skyhookdm/arrow
-  cd /home/yue21/skyhookdm/arrow
+  git clone https://github.com/uccross/skyhookdm-arrow /home/yue21/mlndp/skyhookdm/arrow
+  cd /home/yue21/mlndp/skyhookdm/arrow
   git submodule update --init --recursive
 fi
 
-cd /home/yue21/skyhookdm/arrow
+read -p "Finish clone skyhook-arrow..."  
+cd /home/yue21/mlndp/skyhookdm/arrow
 git fetch origin $BRANCH
 git pull
 git checkout $BRANCH
 mkdir -p cpp/release
 cd cpp/release
 
-echo "build the skyhook"
+read -p "Finish skyhook checkout..."  
 cmake -DARROW_SKYHOOK=ON \
   -DARROW_PARQUET=ON \
   -DARROW_WITH_SNAPPY=ON \
@@ -78,7 +82,7 @@ cmake -DARROW_SKYHOOK=ON \
 # read -p "cmake the skyhook..."
 make -j${NPROC} install
 # read -p "finish build the skyhook, press enter to continue..."
-
+read -p "Finish cmake config and build..."  
 
 if [[ "${BUILD_PYTHON_BINDINGS}" == "true" ]]; then
   # read -p "build python bingings..."
@@ -96,8 +100,8 @@ if [[ "${BUILD_PYTHON_BINDINGS}" == "true" ]]; then
   cp -r /usr/local/include/. /root/dist/include
   # read -p "finish copy the lib..."
 
-  # read -p "install some python dependency..."
-  cd /home/yue21/skyhookdm/arrow/python
+  read -p "install some python dependency..."
+  cd /home/yue21/mlndp/skyhookdm/arrow/python
   pip3 install -r requirements-build.txt -r requirements-test.txt
   # read -p "install the require build..."
   pip3 install wheel
@@ -117,7 +121,7 @@ if [[ "${BUILD_PYTHON_BINDINGS}" == "true" ]]; then
 fi
 
 if [[ "${DEPLOY_CLS_LIBS}" == "true" ]]; then
-  cd /home/yue21/skyhookdm/arrow/cpp/release/release
+  cd /home/yue21/mlndp/skyhookdm/arrow/cpp/release/release
   for node in ${NODE_LIST[@]}; do
     scp libcls* $node:/usr/lib/rados-classes/
     scp libarrow* $node:/usr/lib/
@@ -127,12 +131,12 @@ if [[ "${DEPLOY_CLS_LIBS}" == "true" ]]; then
 fi
 
 if [[ "${BUILD_JAVA_BINDINGS}" == "true" ]]; then
-    mkdir -p /home/yue21/skyhookdm/arrow/java/dist
-    cp -r /tmp/arrow/cpp/release/release/libarrow_dataset_jni.so* /home/yue21/skyhookdm/arrow/java/dist
+    mkdir -p /home/yue21/mlndp/skyhookdm/arrow/java/dist
+    cp -r /home/yue21/mlndp/skyhookdm/arrow/cpp/release/release/libarrow_dataset_jni.so* /home/yue21/skyhookdm/arrow/java/dist
 
     mvn="mvn -B -DskipTests -Dcheckstyle.skip -Drat.skip=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
     mvn="${mvn} -T 2C"
-    cd /home/yue21/skyhookdm/arrow/java
+    cd /home/yue21/mlndp/skyhookdm/arrow/java
     ${mvn} clean install package -P arrow-jni -pl dataset,format,memory,vector -am -Darrow.cpp.build.dir=/tmp/arrow/cpp/release/release
 fi
 
