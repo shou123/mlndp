@@ -6,9 +6,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def generate(index, num_procs, table_shortcut):
     if num_procs == 1:
-        os.system(f"./dbgen -vf -s 100 -T {table_shortcut} -f")
+        os.system(f"./dbgen -vf -s 2 -T {table_shortcut} -f")
     else:
-        os.system(f"./dbgen -vf -s 100 -C {num_procs} -S {index} -T {table_shortcut} -f")
+        os.system(f"./dbgen -vf -s 2 -C {num_procs} -S {index} -T {table_shortcut} -f")
 
 if __name__ == "__main__":
     table_shortcut = str(sys.argv[1])
