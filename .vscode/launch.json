@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: read_parquet_file",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/petastorm/read_parquet_file.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            // "args": ["--config-file", "/home/shiyue/flsim/FLSim/examples/configs/cifar10_config.json"]
+        }
+    ]
+}

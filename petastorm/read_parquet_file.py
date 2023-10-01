@@ -187,7 +187,7 @@ if __name__ == '__main__':
     drop_caches()
 
     # for command
-    with open(f"project/NDP_test/queries/q{query_no}.sql", "r") as f:
+    with open(f"NDP_test/queries/q{query_no}.sql", "r") as f:
         query = f.read()
 
     query = f"PRAGMA disable_object_cache;\nPRAGMA threads={mp.cpu_count()};\n{query}"
