@@ -108,7 +108,10 @@ def mnist_data_to_petastorm_dataset(download_dir, output_url, spark_master=None,
 
     # The MNIST data is small enough to do everything here in Python
     for dset, data in mnist_data.items():
+        print(f"dset: {dset}")
+        print(f"data: {data}")
         dset_output_url = '{}/{}'.format(output_url, dset)
+        print(f"dset_output_url: {dset_output_url}")
         # Using row_group_size_mb=1 to avoid having just a single rowgroup in this example. In a real store, the value
         # should be similar to an HDFS block size.
         with materialize_dataset(spark, dset_output_url, MnistSchema, row_group_size_mb=1):
@@ -123,12 +126,27 @@ def mnist_data_to_petastorm_dataset(download_dir, output_url, spark_master=None,
             # Convert to pyspark.sql.Row
             sql_rows = map(lambda r: dict_to_spark_row(MnistSchema, r), idx_image_digit_list)
 
+
+            df = spark.createDataFrame(sql_rows, MnistSchema.as_spark_schema())
+            # print(df.show())
+            # Set the desired block size (in bytes)
+            desired_block_size_bytes = 10 * 1024 * 1024  # 100MB
+
+            # Calculate the number of partitions needed to achieve the desired block size
+            num_partitions = max(1,int(df.rdd.getNumPartitions() * (df.rdd.map(lambda x: len(str(x))).sum() / desired_block_size_bytes)))
+            data = df.repartition(num_partitions)
+            # print(f"data: {data}")
+
+
             # Write out the result
-            spark.createDataFrame(sql_rows, MnistSchema.as_spark_schema()) \
-                .coalesce(parquet_files_count) \
-                .write \
-                .option('compression', 'none') \
-                .parquet(dset_output_url)
+            # spark.createDataFrame(sql_rows, MnistSchema.as_spark_schema()) \
+            #     .coalesce(parquet_files_count) \
+            #     .write \
+            #     .option('compression', 'none') \
+            #     .mode('overwrite') \
+            #     .parquet(dset_output_url) 
+            data.write.option("parquet.block.size", str(desired_block_size_bytes)).mode('overwrite').parquet(dset_output_url)
+                
 
 
 if __name__ == '__main__':
