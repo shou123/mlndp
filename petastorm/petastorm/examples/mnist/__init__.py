@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-DEFAULT_MNIST_DATA_PATH = '/tmp/mnist'
+DEFAULT_MNIST_DATA_PATH = '/mnt/cephfs/minist_dataset'
