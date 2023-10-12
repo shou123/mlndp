@@ -31,6 +31,8 @@ from torchvision import transforms
 from examples.mnist import DEFAULT_MNIST_DATA_PATH
 from petastorm import make_reader, TransformSpec
 from petastorm.pytorch import DataLoader
+import pyarrow.dataset as ds
+import os
 
 
 class Net(nn.Module):
@@ -56,6 +58,7 @@ class Net(nn.Module):
 def train(model, device, train_loader, log_interval, optimizer, epoch):
     model.train()
     for batch_idx, row in enumerate(train_loader):
+        # print(f"batch_idx: {batch_idx}, row: {row}")
         data, target = row['image'].to(device), row['digit'].to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -104,6 +107,14 @@ def _transform_row(mnist_row):
 
     return result_row
 
+# def arrow_dataset(args):
+#     format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
+    
+#     dataset_path = f"file:///mnt/cephfs/minist_dataset"
+#     mnist_dataset = ds.dataset(os.path.join(dataset_path, "train"), format=format)
+#     print(f"mnist_dataset:\n {mnist_dataset.to_table().to_pandas()}")
+#     return mnist_dataset
+
 
 def main():
     # Training settings
@@ -117,7 +128,7 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=1, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--all-epochs', action='store_true', default=False,
                         help='train all epochs before testing accuracy/loss')
@@ -141,6 +152,7 @@ def main():
     model = Net().to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
+
     # Configure loop and Reader epoch for illustrative purposes.
     # Typical training usage would use the `all_epochs` approach.
     #
@@ -161,11 +173,20 @@ def main():
                                     transform_spec=transform, seed=args.seed, shuffle_rows=True),
                         batch_size=args.batch_size) as train_loader:
             train(model, device, train_loader, args.log_interval, optimizer, epoch)
-        with DataLoader(make_reader('{}/test'.format(args.dataset_url), num_epochs=reader_epochs,
-                                    transform_spec=transform),
-                        batch_size=args.test_batch_size) as test_loader:
-            test(model, device, test_loader)
+        # with DataLoader(make_reader('{}/test'.format(args.dataset_url), num_epochs=reader_epochs,
+        #                             transform_spec=transform),
+        #                 batch_size=args.test_batch_size) as test_loader:
+        #     test(model, device, test_loader)
 
+
+    # reader = make_reader('{}/train'.format(args.dataset_url), num_epochs=reader_epochs,
+    #                 transform_spec=transform, seed=args.seed, shuffle_rows=True)
+    # format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
+    # dataset = ds.dataset(reader.dataset.paths,format=format)
+    # # 2. Create a DataLoader from the reader
+    # for epoch in range(1, loop_epochs + 1):
+    #     train_loader = DataLoader(dataset, batch_size=args.batch_size)
+    #     train(model, device, train_loader, args.log_interval, optimizer, epoch)
 
 if __name__ == '__main__':
     main()

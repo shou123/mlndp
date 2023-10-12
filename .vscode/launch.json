@@ -23,6 +23,16 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": ["--download-dir", "mnt/cephfs/minist_dataset", "--output-url", "file:///mnt/cephfs/minist_dataset"]
+        },
+        {
+            "name": "Python: pytorch_example",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/petastorm/petastorm/examples/mnist/pytorch_example.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["--dataset-url", "file:///mnt/cephfs/minist_dataset"]
         }
     ]
 }
