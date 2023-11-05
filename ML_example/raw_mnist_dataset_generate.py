@@ -34,8 +34,8 @@ def main():
     test_df = create_dataframe(test_dataset)    
 
     # Save the train and test dataframes as Parquet files
-    train_parquet = save_to_parquet(train_df, '/mnt/cephfs/raw_minist_dataset/mnist_train.parquet')
-    test_parquet = save_to_parquet(test_df, '/mnt/cephfs/raw_minist_dataset/mnist_test.parquet')
+    train_parquet = save_to_parquet(train_df, '/mnt/cephfs/raw_minist_dataset/train/mnist_train.parquet')
+    test_parquet = save_to_parquet(test_df, '/mnt/cephfs/raw_minist_dataset/test/mnist_test.parquet')
 
 
 if __name__ == '__main__':
