@@ -20,6 +20,7 @@
 import pyarrow as pa
 from pyarrow.util import _is_iterable, _stringify_path, _is_path_like
 from pyarrow import parquet as pq
+import os
 
 from pyarrow._dataset import (  # noqa
     SkyhookFileFormat,
@@ -655,8 +656,11 @@ or tables, iterable of batches, RecordBatchReader, or URI
         selector_ignore_prefixes=ignore_prefixes
     )
     #=====================get the common_metadata for train folder============================
-    metadata = pq.read_metadata("/mnt/cephfs/minist_dataset/train/_common_metadata")
-    print(f"paarow.dataset_metadata: {metadata}")
+    if os.path.basename(source) == "train":
+        metadata = pq.read_metadata("/mnt/cephfs/minist_dataset/train/_common_metadata")
+    # print(f"paarow.dataset_metadata: {metadata}")
+    elif os.path.basename(source) == "test":
+        metadata = pq.read_metadata("/mnt/cephfs/minist_dataset/test/_common_metadata")
     #=========================================================================================
 
     if _is_path_like(source):

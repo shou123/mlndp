@@ -32,7 +32,27 @@
             "program": "${workspaceFolder}/petastorm/petastorm/examples/mnist/pytorch_example.py",
             "console": "integratedTerminal",
             "justMyCode": false,
-            "args": ["--dataset-url", "file:///mnt/cephfs/minist_dataset"]
-        }
+            "args": ["--dataset-url", "file:///mnt/cephfs/minist_dataset", "--epochs", "1","--batch-size","32"]
+        },
+        {
+            "name": "Python: raw_mnist_dataset_generate",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/ML_example/raw_mnist_dataset_generate.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            // "args": ["--download-dir", "mnt/cephfs/minist_dataset", "--output-url", "file:///mnt/cephfs/minist_dataset"]
+        },
+        {
+            "name": "Python: mnist_bench_single",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/ML_example/mnist_bench_single.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["--epochs","1"]
+        },
     ]
 }

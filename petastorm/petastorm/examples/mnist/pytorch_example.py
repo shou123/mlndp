@@ -17,7 +17,7 @@
 # https://github.com/pytorch/examples/mnist/main.py .
 ###
 from __future__ import division, print_function
-
+import time
 import argparse
 
 # Must import pyarrow before torch. See: https://github.com/uber/petastorm/blob/master/docs/troubleshoot.rst
@@ -31,43 +31,74 @@ from torchvision import transforms
 from examples.mnist import DEFAULT_MNIST_DATA_PATH
 from petastorm import make_reader, TransformSpec
 from petastorm.pytorch import DataLoader
-import pyarrow.dataset as ds
-import os
 
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, 10)
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1)
+        self.dropout1 = nn.Dropout(0.25)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(9216, 128)
+        self.fc2 = nn.Linear(128, 10)
 
-    # pylint: disable=arguments-differ
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, 320)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
+        x = self.conv1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = F.relu(x)
+        x = F.max_pool2d(x, 2)
+        x = self.dropout1(x)
+        x = torch.flatten(x, 1)
+        x = self.fc1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
         x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+        output = F.log_softmax(x, dim=1)
+        return output
 
 
 def train(model, device, train_loader, log_interval, optimizer, epoch):
     model.train()
-    for batch_idx, row in enumerate(train_loader):
-        # print(f"batch_idx: {batch_idx}, row: {row}")
-        data, target = row['image'].to(device), row['digit'].to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % log_interval == 0:
-            print('Train Epoch: {} [{}]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), loss.item()))
+    # statixtic calculate
+    total_data_processed = 0
+
+
+            # Open the files in append mode
+    with open('/home/yue21/mlndp/ML_example/result/iops.txt', 'a') as iops_file, \
+         open('/home/yue21/mlndp/ML_example/result/throughput.txt', 'a') as throughput_file, \
+         open('/home/yue21/mlndp/ML_example/result/latency.txt', 'a') as latency_file:
+        for batch_idx, row in enumerate(train_loader):
+            start_time = time.time()
+            data, target = row['image'].to(device), row['digit'].to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            optimizer.step()
+
+            total_data_processed += len(data)
+            elapsed_time = time.time() - start_time
+            iops = (batch_idx + 1) / elapsed_time # batch per second
+            throughput = total_data_processed / elapsed_time # data per second
+            latency = elapsed_time #time for processing for each batch
+
+            # Write the metrics to the files
+            iops_file.write(f'IOPS: {iops:.2f} batch/s\n')
+            throughput_file.write(f'Throughput: {throughput:.2f} data/s\n')
+            latency_file.write(f'Batch_Latency: {latency:.6f} second\n')
+            
+            if batch_idx % log_interval == 0:
+                print('Train Epoch: {} [{}]\tLoss: {:.6f}'.format(
+                    epoch, batch_idx * len(data), loss.item()))
+            # if batch_idx % log_interval == 0:
+            #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset),
+            #         100. * batch_idx / len(train_loader), loss.item()))
+
+                print(f'IOPS: {iops:.2f} batch/s')
+                print(f'Throughput: {throughput:.2f} data/s')
+                print(f'Batch_Latency: {latency:.6f} second')
 
 
 def test(model, device, test_loader):
@@ -107,14 +138,6 @@ def _transform_row(mnist_row):
 
     return result_row
 
-# def arrow_dataset(args):
-#     format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
-    
-#     dataset_path = f"file:///mnt/cephfs/minist_dataset"
-#     mnist_dataset = ds.dataset(os.path.join(dataset_path, "train"), format=format)
-#     print(f"mnist_dataset:\n {mnist_dataset.to_table().to_pandas()}")
-#     return mnist_dataset
-
 
 def main():
     # Training settings
@@ -128,7 +151,7 @@ def main():
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=1, metavar='N',
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--all-epochs', action='store_true', default=False,
                         help='train all epochs before testing accuracy/loss')
@@ -152,7 +175,6 @@ def main():
     model = Net().to(device)
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-
     # Configure loop and Reader epoch for illustrative purposes.
     # Typical training usage would use the `all_epochs` approach.
     #
@@ -173,20 +195,11 @@ def main():
                                     transform_spec=transform, seed=args.seed, shuffle_rows=True),
                         batch_size=args.batch_size) as train_loader:
             train(model, device, train_loader, args.log_interval, optimizer, epoch)
-        # with DataLoader(make_reader('{}/test'.format(args.dataset_url), num_epochs=reader_epochs,
-        #                             transform_spec=transform),
-        #                 batch_size=args.test_batch_size) as test_loader:
-        #     test(model, device, test_loader)
+        with DataLoader(make_reader('{}/test'.format(args.dataset_url), num_epochs=reader_epochs,
+                                    transform_spec=transform),
+                        batch_size=args.test_batch_size) as test_loader:
+            test(model, device, test_loader)
 
-
-    # reader = make_reader('{}/train'.format(args.dataset_url), num_epochs=reader_epochs,
-    #                 transform_spec=transform, seed=args.seed, shuffle_rows=True)
-    # format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
-    # dataset = ds.dataset(reader.dataset.paths,format=format)
-    # # 2. Create a DataLoader from the reader
-    # for epoch in range(1, loop_epochs + 1):
-    #     train_loader = DataLoader(dataset, batch_size=args.batch_size)
-    #     train(model, device, train_loader, args.log_interval, optimizer, epoch)
 
 if __name__ == '__main__':
     main()

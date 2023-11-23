@@ -430,11 +430,10 @@ class Reader(object):
         # stored_schema = infer_or_load_unischema(self.dataset)
 
         #==========================Skyhook================================
-        for _ in range(2000):
-            format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
-            self.dataset,metadata = ds.dataset(dataset_path, format=format,filesystem=pyarrow_filesystem)
-        print(self.dataset)
-        print(f"self.dataset:\n {self.dataset.to_table().to_pandas()}")
+        format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
+        self.dataset,metadata = ds.dataset(dataset_path, format=format,filesystem=pyarrow_filesystem)
+        # print(self.dataset)
+        # print(f"self.dataset:\n {self.dataset.to_table().to_pandas()}")
         # for skyhook read schema
         stored_schema = infer_or_load_unischema(self.dataset,metadata)
         #=================================================================

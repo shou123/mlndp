@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import StepLR
 import pyarrow.dataset as ds
 from torch.utils.data import Dataset
 import pyarrow as pa
-
+import time
 
 
 class Net(nn.Module):
@@ -41,6 +41,7 @@ class Net(nn.Module):
 class CustomDataset(Dataset):
     def __init__(self, pyarrow_dataset):
         self.record_count = 0
+        self. batch_count = []
         for _ in pyarrow_dataset.to_batches():
             self.record_count += len(_)  
         self.dataset = pyarrow_dataset# Count the records in the current batch
@@ -50,33 +51,79 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, idx):
         # sample = self.dataset.to_batches().take([idx])  # Use to_batches to get the record
-
+        self.total_comsume_time = 0
+        self.total_comsume_time1 = 0
+        
+        
         arrow_array = pa.array([idx])
+        start_time1 = time.time()
         # print(dataset.take(arrow_array).to_pandas())
         sample = self.dataset.take(arrow_array)  # Use to_batches to get the record
+        end_time1 = time.time()
 
         label = int(sample['label'].to_pandas())
+        start_time = time.time()
         # image = torch.FloatTensor(sample['image'].to_pandas()).view((28,28)).unsqueeze(0)
         image = torch.FloatTensor(sample['image'].to_pandas()).view((1,28,28))
+        end_time = time.time()
+        
+        comsume_time = (end_time-start_time)
+        comsume_time1 = (end_time1-start_time1)
+
+        self.total_comsume_time+=comsume_time
+        self.total_comsume_time1+=comsume_time1
+
+        self.batch_count.append(comsume_time)
+        if len(self.batch_count) == 32:
+            print(f"each batch data reshape time: {self.total_comsume_time}")
+            print(f"each batch get data time: {self.total_comsume_time1}")
         # image = torch.tensor(sample[0]['image'][0])
         return image, label
 
 
+
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-            if args.dry_run:
-                break
+    # statixtic calculate
+    total_data_processed = 0
+    start_time = time.time()
+
+        # Open the files in append mode
+    with open('/home/yue21/mlndp/ML_example/result/iops.txt', 'a') as iops_file, \
+         open('/home/yue21/mlndp/ML_example/result/throughput.txt', 'a') as throughput_file, \
+         open('/home/yue21/mlndp/ML_example/result/latency.txt', 'a') as latency_file:
+
+
+        for batch_idx, (data, target) in enumerate(train_loader):
+            start_time = time.time()
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            optimizer.step()
+
+            total_data_processed += len(data)
+            elapsed_time = time.time() - start_time
+            iops = (batch_idx + 1) / elapsed_time # batch per second
+            throughput = total_data_processed / elapsed_time # data per second
+            latency = elapsed_time #time for processing for each batch
+
+            # Write the metrics to the files
+            iops_file.write(f'IOPS: {iops:.2f} batch/s\n')
+            throughput_file.write(f'Throughput: {throughput:.2f} data/s\n')
+            latency_file.write(f'Batch_Latency: {latency:.6f} second\n')
+
+            if batch_idx % args.log_interval == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(epoch, batch_idx * len(data), len(train_loader.dataset),
+                    100. * batch_idx / len(train_loader), loss.item()))
+
+                print(f'IOPS: {iops:.2f} batch/s')
+                print(f'Throughput: {throughput:.2f} data/s')
+                print(f'Batch_Latency: {latency:.6f} second')
+
+                if args.dry_run:
+                    break
 
 
 def test(model, device, test_loader):
@@ -101,7 +148,7 @@ def test(model, device, test_loader):
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=32, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
@@ -149,33 +196,49 @@ def main():
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
         ])
-    # dataset1 = datasets.MNIST('/home/yue21/mlndp/mnist_dataset/MNIST/raw', train=True, download=True,
-    #                    transform=transform)
-    # dataset2 = datasets.MNIST('/home/yue21/mlndp/mnist_dataset/MNIST/raw', train=False,
-    #                    transform=transform)
+
+#===============================Skyhook=========================================
+    train_dataset_path = "/mnt/cephfs/raw_minist_dataset/train"
+    test_dataset_path = "/mnt/cephfs/raw_minist_dataset/test"
 
     format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
-    dataset_path = "/mnt/cephfs/raw_minist_dataset/train"
-    dataset,metadata = ds.dataset(dataset_path, format=format)
-    print(dataset.to_table().to_pandas())
+    train_dataset,metadata = ds.dataset(train_dataset_path, format=format)
+    test_dataset,metadata = ds.dataset(test_dataset_path, format=format)
+    train_custom_dataset = CustomDataset(train_dataset)
+    test_custom_dataset = CustomDataset(test_dataset)
+    train_loader = torch.utils.data.DataLoader(train_custom_dataset, batch_size=32, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_custom_dataset, batch_size=32, shuffle=True)
+
+# #===============================No Skyhook=========================================
+    # train_dataset_path = "/mnt/cephfs/raw_minist_dataset/train"
+    # test_dataset_path = "/mnt/cephfs/raw_minist_dataset/test"
+
+    # train_dataset,metadata = ds.dataset(train_dataset_path, format="parquet")
+    # test_dataset,metadata = ds.dataset(test_dataset_path, format="parquet")
+    # train_custom_dataset = CustomDataset(train_dataset)
+    # test_custom_dataset = CustomDataset(test_dataset)
+    # train_loader = torch.utils.data.DataLoader(train_custom_dataset, batch_size=32, shuffle=True)
+    # test_loader = torch.utils.data.DataLoader(test_custom_dataset, batch_size=32, shuffle=True)
 
 
+#=============================Pure ML=================================================
+    dataset1 = datasets.MNIST('/mnt/cephfs/petastorm_dataset/pure_mnist_dataset', train=True, download=True,
+                       transform=transform)
+    dataset2 = datasets.MNIST('/mnt/cephfs/petastorm_dataset/pure_mnist_dataset', train=False,
+                       transform=transform)
 
+    train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
+    test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
+#=======================================================================================
 
-
-    custom_dataset = CustomDataset(dataset)
-    data_loader = torch.utils.data.DataLoader(custom_dataset, batch_size=32, shuffle=True)
-
-    # train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
-    # test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
     model = Net().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, data_loader , optimizer, epoch)
-        # test(model, device, test_loader)
+        train(args, model, device, train_loader , optimizer, epoch)
+        test(model, device, test_loader)
         scheduler.step()
 
     if args.save_model:
