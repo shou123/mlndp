@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # query = "SELECT * FROM lineitem LIMIT 20;" 
 
     # for command
-    with open(f"queries/q{query_no}.sql", "r") as f:
+    with open(f"NDP_test/queries/q{query_no}.sql", "r") as f:
         query = f.read()
 
     # query = f"PRAGMA disable_object_cache;\nPRAGMA threads={mp.cpu_count()};\n{query}"
