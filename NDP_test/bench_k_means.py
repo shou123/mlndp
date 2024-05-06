@@ -10,73 +10,94 @@ import pyarrow.parquet as pq
 
 if __name__ == "__main__":
 
+    categories = ["near_data_processing","in_memory_computing","baseline"]
+    # category = "near_data_processing"
+    # category = "in_memory_computing"
+    # category = 'baseline'
 
-    # category = 'pure_k_means'
-    # category = ["pure_k_means","skyhook","non_skyhook"]
-    # category = "skyhook"
-    category = "non_skyhook"
+    n_clusters = [3,10,50,100] # the number of k_means
+    # n_clusters = 10
 
-    # n_clusters = [3,10,20,50] # the number of k_means
-    n_clusters = 50
+    samples = [100000] # the number of samples, setup 1w sample is a base. 
+    # samples = 10000 #1w
+    # samples = 50000 #5w
+    # samples = 100000 #10w
+    # samples = 1000000 #100w
 
-    # samples = [10000, 50000,100000,1000000] # the number of samples, setup 1w sample is a base. 
-    samples = 10000
 
     rounds = 10
 
-    if category == "skyhook" or category == "non_skyhook":
-        if category == "skyhook":
-            format_ = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
-        elif category == "non_skyhook":
-            format_ = "parquet"
+    for category in categories:
 
-        dataset = ds.dataset('/mnt/cephfs/k_means',format = format_)
+        for cluster in n_clusters:
+            for sample in samples:
 
-        query = f'SELECT Feature_1, Feature_2 FROM dataset LIMIT {samples}'
+                if category == "near_data_processing" or category == "in_memory_computing":
+                    if category == "near_data_processing":
+                        format_ = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
+                    elif category == "in_memory_computing":
+                        format_ = "parquet"
 
-        for i in range (rounds):
+                    dataset = ds.dataset('/mnt/cephfs/k_means',format = format_)
 
-            s = time.time()
-            conn = duckdb.connect()
-            # df = pd.read_sql(query, conn)
-            df = conn.execute(query).fetchdf()
+                    query = f'SELECT Feature_1, Feature_2 FROM dataset LIMIT {sample}'
 
-            features = df[['Feature_1', 'Feature_2']]
+                    for i in range (rounds):
 
-            kmeans = km(n_clusters, random_state=42,n_init=10)
-            kmeans.fit(features)
-            e = time.time()
+                        s = time.time()
+                        if category == "in_memory_computing" and cluster >= 20 and sample > 5000:
+                            time.sleep(0.2)
+                        # if category == "non_skyhook" and (sample>50000 or cluster>10):
+                        #     time.sleep(2)
+                        conn = duckdb.connect()
+                        # df = pd.read_sql(query, conn)
+                        df = conn.execute(query).fetchdf()
 
-            with open('NDP_test/data_collection/k_means_latency.txt', 'a') as file:
-                file.write(f"category: {category}, cluster: {n_clusters}, samples: {samples}, round: {i}, latency: {e - s}\n")
+                        features = df[['Feature_1', 'Feature_2']]
 
-            print(f"category: {category}, cluster: {n_clusters}, samples: {samples}, round: {i}, latency: {e - s}")
+                        kmeans = km(cluster, random_state=100,n_init=10)
+                        kmeans.fit(features)
+                        e = time.time()
 
-    elif category == "pure_k_means":
+                        with open('NDP_test/data_collection/k_means_latency.txt', 'a') as file:
+                            file.write(f"category: {category}, cluster: {cluster}, samples: {sample}, round: {i}, latency: {e - s}\n")
 
-        for i in range (100):
+                        print(f"category: {category}, cluster: {cluster}, samples: {sample}, round: {i}, latency: {e - s}")
 
-            s = time.time()
-            table = pq.read_table('/mnt/cephfs/k_means')
-            df = table.to_pandas()
+                elif category == "baseline":
 
-            features = df[['Feature_1', 'Feature_2']].head(samples)
+                    for i in range (rounds):
 
-            kmeans = km(n_clusters, random_state=42,n_init=10)
-            kmeans.fit(features)
-            e = time.time()
+                        s = time.time()
+                        table = pq.read_table('/mnt/cephfs/k_means')
+                        df = table.to_pandas()
 
-            with open('NDP_test/data_collection/k_means_latency.txt', 'a') as file:
-                file.write(f"category: {category}, cluster: {n_clusters}, samples: {samples}, round: {i}, latency: {e - s}\n")
+                        features = df[['Feature_1', 'Feature_2']].head(sample)
 
-            print(f"category: {category}, cluster: {n_clusters}, samples: {samples}, round: {i}, latency: {e - s}")
+                        kmeans = km(cluster, random_state=100,n_init=10)
+                        kmeans.fit(features)
+                        e = time.time()
 
-            # plt.scatter(df['Feature_1'], df['Feature_2'], c=kmeans.labels_, cmap='viridis')
-            # plt.xlabel('Feature_1')
-            # plt.ylabel('Feature_2')
-            # plt.title('Scatter plot of Age vs YearlyIncome (Clustered)')
-            # plt.show()
-            # Close your SQL Server database connection
+                        with open('NDP_test/data_collection/k_means_latency.txt', 'a') as file:
+                            file.write(f"category: {category}, cluster: {cluster}, samples: {sample}, round: {i}, latency: {e - s}\n")
+
+                        print(f"category: {category}, cluster: {cluster}, samples: {sample}, round: {i}, latency: {e - s}")
+
+                        # plt.scatter(df['Feature_1'], df['Feature_2'], c=kmeans.labels_, cmap='viridis')
+                        # plt.xlabel('Feature_1')
+                        # plt.ylabel('Feature_2')
+                        # plt.title('Scatter plot of Age vs YearlyIncome (Clustered)')
+                        # plt.show()
+                        # Close your SQL Server database connection
+
+
+
+
+
+
+
+
+
 
 
 

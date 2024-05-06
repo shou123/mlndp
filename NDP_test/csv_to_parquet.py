@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     for table_name in tables:
         # Read the schema file and parse the column names
-        with open(f'schemas/{table_name}', 'r') as f:
+        with open(f'NDP_test/schemas/{table_name}', 'r') as f:
             lines = f.readlines()
         cols = list()
         for line in lines:

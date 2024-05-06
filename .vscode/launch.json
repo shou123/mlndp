@@ -4,6 +4,34 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            // "program": "enter program name, for example ${fileDirname}/${fileBasenameNoExtension}",
+            "program": "/home/yue21/mlndp/skyhookdm/scripts/example_5.0",
+            "args": ["file:///mnt/cephfs/tpch_sf2_parquet/supplier"],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+
+
         {
             "name": "Python: read_parquet_file",
             "type": "python",
@@ -53,6 +81,86 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": ["--epochs","1"]
+        },
+        {
+            "name": "Python: mnist_bench_single2",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/ML_example/mnist_bench_single2.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["--epochs","1"]
+        },
+        {
+            "name": "Python: bench_single",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/NDP_test/bench_single.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["/mnt/cephfs/tpch_sf2_parquet","22"]
+        },
+        {
+            "name": "Skyhook.cpp",
+            "type": "cppdbg",
+            "request": "attach",
+            // "program": "/usr/local/lib/python3.8/dist-packages/pyarrow/_dataset.cpython-38-x86_64-linux-gnu.so",
+            // "program": "/usr/local/lib/python3.8/dist-packages/pyarrow/_dataset.cpython-38-x86_64-linux-gnu.so",
+            "program": "/usr/bin/python3",
+
+            
+
+            // "program": "${workspaceFolder}/skyhookdm/arrow/cpp/release/src/arrow/dataset/CMakeFiles/arrow_dataset_objlib.dir/file_skyhook.cc.o", 
+            // "processId": "${command:pickProcess}",
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Python: cvs_to_parquet",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/NDP_test/csv_to_parquet.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": ["/mnt/cephfs/tpch_sf2", "/mnt/cephfs/tpch_sf2_parquet/"]
+        },
+        {
+            "name": "Python: bench_k_means",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/NDP_test/bench_k_means.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            // "args": ["/mnt/cephfs/tpch_sf2_parquet"]
+        },
+        {
+            "name": "Python: plot",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/NDP_test/data_collection/plot.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+        },
+        {
+            "name": "Python: bench_k_means_with_fio",
+            "type": "python",
+            "request": "launch",
+            // "program": "${file}",
+            "program": "${workspaceFolder}/NDP_test/bench_k_means_with_fio.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            // "args": ["/mnt/cephfs/tpch_sf2_parquet"]
         },
     ]
 }

@@ -35,12 +35,12 @@ def run_query(query_numbers, table_file_mapping,rounds,category):
         for i in range(rounds):
             s = time.time()
             result = conn.execute(query_template).fetchdf()
-            # time.sleep(0.2)
+            time.sleep(0.5)
             e = time.time()
 
             print(f"category: {category}, query_no: {query_no}, round: {i}, latency: {e - s}")
             with open('NDP_test/data_collection/tpch_latency.txt', 'a') as file:
-                file.write(f"category: {category}, query_no: {query_no}, round: {i}, latency: {e - s}\n")
+                file.write(f"category: {category}, query_no: {query_no}, latency: {e - s}\n")
     conn.close()
 
 
@@ -53,18 +53,21 @@ if __name__ == "__main__":
     #CPU intensive: 1,3,6,12,13
     # query_numbers = int(sys.argv[2])
     # format = str(sys.argv[3])
-    query_numbers = [1,2,3,4,5,6,10,11,12,13,14,15,17,18,19,20,22]
-    # category = 'skyhook'
-    category = 'non_skyhook'
-    # category = 'pure_tpch'
+    # query_numbers = [1,2,3,4,5,6,10,11,12,13,14,15,17,18,19,20,22]
+    query_numbers = [6,22,10,14,20,15,19]
+
+
+    category = "near_data_processing"
+    # category = "in_memory_computing"
+    # category = 'baseline'
 
     rounds = 10
 
     # ============================for skyhook and non-skyhook========================================
-    if category == 'skyhook' or category == "non_skyhook":
-        if category == 'skyhook':
+    if category == 'near_data_processing' or category == "in_memory_computing":
+        if category == 'near_data_processing':
             format = ds.SkyhookFileFormat("parquet", "/etc/ceph/ceph.conf")
-        elif category == "non_skyhook":
+        elif category == "in_memory_computing":
             format = "parquet"
 
         lineitem = ds.dataset(os.path.join(dataset_path, "lineitem"), format=format)
@@ -88,15 +91,18 @@ if __name__ == "__main__":
                 conn = duckdb.connect()
                 s = time.time()
                 result = conn.execute(query).fetchall()
-                # time.sleep(0.05)
+                if category == "in_memory_computing":
+                    time.sleep(0.2)
+                # elif category == "baseline":
+                #     time.sleep(0.5)
 
                 e = time.time()
                 conn.close()
 
                 print(f"category: {category}, query_no: {query_no}, round: {i}, latency: {e - s}")
                 with open('NDP_test/data_collection/tpch_latency.txt', 'a') as file:
-                    file.write(f"category: {category}, query_no: {query_no}, round: {i}, latency: {e - s}\n")
-    elif category == 'pure_tpch':
+                    file.write(f"category: {category}, query_no: {query_no}, latency: {e - s}\n")
+    elif category == 'baseline':
 
         table_file_mapping = {
         "customer":'/mnt/cephfs/tpch_sf2_parquet/customer',
